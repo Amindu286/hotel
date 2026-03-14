@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Randiya Admin Panel</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Login Overlay -->
+    <div id="login-screen" class="login-screen">
+        <div class="login-box">
+            <h2>Admin Login</h2>
+            <form id="login-form">
+                <input type="text" id="login-user" placeholder="Username" required>
+                <input type="password" id="login-pass" placeholder="Password" required>
+                <button type="submit" class="btn">Login</button>
+                <p id="login-error" class="error"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="admin-dashboard" class="admin-dashboard hidden">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Randiya Admin</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-btn active" data-target="dashboard-view">Dashboard</button>
+                <button class="nav-btn" data-target="rooms-view">Rooms</button>
+                <button class="nav-btn" data-target="pricing-view">Pricing & Promo</button>
+                <button class="nav-btn" data-target="bookings-view">Bookings</button>
+                <button class="nav-btn" data-target="events-view">Events</button>
+                <button class="nav-btn" data-target="gallery-view">Gallery</button>
+                <button class="nav-btn" data-target="content-view">Site Content</button>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="logout-btn" class="nav-btn logout-btn">Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard View -->
+            <section id="dashboard-view" class="view-section active">
+                <h1>Dashboard</h1>
+                <div class="stats-grid" id="dashboard-stats">
+                    <div class="stat-card"><h3>Total Bookings</h3><p id="stat-total">0</p></div>
+                    <div class="stat-card"><h3>Check-ins Today</h3><p id="stat-checkins">0</p></div>
+                    <div class="stat-card"><h3>Occupied Rooms</h3><p id="stat-occupied">0</p></div>
+                    <div class="stat-card"><h3>Revenue This Month</h3><p id="stat-revenue">$0</p></div>
+                </div>
+            </section>
+
+            <!-- Rooms View -->
+            <section id="rooms-view" class="view-section">
+                <h1>Manage Rooms</h1>
+                <div class="form-container">
+                    <h3>Add New Room</h3>
+                    <form id="add-room-form">
+                        <input type="text" id="room-name" placeholder="Name" required>
+                        <input type="text" id="room-type" placeholder="Type (e.g., Suite)">
+                        <textarea id="room-desc" placeholder="Description"></textarea>
+                        <input type="number" id="room-price" placeholder="Price per night" required>
+                        <input type="number" id="room-guests" placeholder="Max Guests" required>
+                        <input type="file" id="room-images" multiple accept="image/*">
+                        <button type="submit" class="btn">Add Room</button>
+                    </form>
+                </div>
+                <div class="table-container">
+                    <table id="rooms-table">
+                        <thead><tr><th>ID</th><th>Name</th><th>Price</th><th>Max Guests</th><th>Actions</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Pricing & Promo View -->
+            <section id="pricing-view" class="view-section">
+                <h1>Pricing & Promotions</h1>
+                <div class="grid-2">
+                    <div class="form-container">
+                        <h3>Add Seasonal Pricing</h3>
+                        <form id="add-seasonal-form">
+                            <select id="seasonal-room" required></select>
+                            <input type="date" id="seasonal-start" required>
+                            <input type="date" id="seasonal-end" required>
+                            <input type="number" id="seasonal-price" placeholder="Override Price" required>
+                            <button type="submit" class="btn">Add Rule</button>
+                        </form>
+                        <table id="seasonal-table"><thead><tr><th>Room</th><th>Date Range</th><th>Price</th><th>Act</th></tr></thead><tbody></tbody></table>
+                    </div>
+                    <div class="form-container">
+                        <h3>Add Promo Code</h3>
+                        <form id="add-promo-form">
+                            <input type="text" id="promo-code" placeholder="Code (e.g., SUMMER10)" required>
+                            <input type="number" id="promo-discount" placeholder="Discount %" required>
+                            <input type="date" id="promo-valid" required>
+                            <button type="submit" class="btn">Add Promo</button>
+                        </form>
+                        <table id="promo-table"><thead><tr><th>Code</th><th>Discount</th><th>Valid Until</th><th>Act</th></tr></thead><tbody></tbody></table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bookings View -->
+            <section id="bookings-view" class="view-section">
+                <h1>Manage Bookings</h1>
+                <div class="table-container">
+                    <table id="bookings-table">
+                        <thead><tr><th>ID</th><th>Guest</th><th>Room</th><th>Dates</th><th>Total</th><th>Status</th><th>Act</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Events View -->
+            <section id="events-view" class="view-section">
+                <h1>Manage Events</h1>
+                <div class="form-container">
+                    <form id="add-event-form">
+                        <input type="text" id="event-title" placeholder="Event Title" required>
+                        <input type="date" id="event-date" required>
+                        <textarea id="event-desc" placeholder="Description"></textarea>
+                        <input type="file" id="event-img" accept="image/*" required>
+                        <button type="submit" class="btn">Add Event</button>
+                    </form>
+                </div>
+                <div class="table-container">
+                    <table id="events-table"><thead><tr><th>Title</th><th>Date</th><th>Act</th></tr></thead><tbody></tbody></table>
+                </div>
+            </section>
+
+            <!-- Gallery View -->
+            <section id="gallery-view" class="view-section">
+                <h1>Manage Gallery</h1>
+                <div class="form-container">
+                    <form id="add-gallery-form">
+                        <select id="gallery-category" required>
+                            <option value="Rooms">Rooms</option>
+                            <option value="Events">Events</option>
+                            <option value="Dining">Dining</option>
+                            <option value="Pool">Pool</option>
+                        </select>
+                        <input type="text" id="gallery-caption" placeholder="Caption (optional)">
+                        <input type="file" id="gallery-img" accept="image/*" required>
+                        <button type="submit" class="btn">Upload Image</button>
+                    </form>
+                </div>
+                <div class="gallery-grid" id="admin-gallery-grid"></div>
+            </section>
+
+            <!-- Site Content View -->
+            <section id="content-view" class="view-section">
+                <h1>Site Content</h1>
+                <div class="form-container">
+                    <form id="content-form">
+                        <div class="form-group"><label>Hero Title</label><input type="text" id="content-hero_title"></div>
+                        <div class="form-group"><label>Hero Subtitle</label><input type="text" id="content-hero_subtitle"></div>
+                        <div class="form-group"><label>About Text</label><textarea id="content-about_text"></textarea></div>
+                        <div class="form-group"><label>Contact Email</label><input type="email" id="content-contact_email"></div>
+                        <div class="form-group"><label>Contact Phone</label><input type="text" id="content-contact_phone"></div>
+                        <div class="form-group"><label>Contact Address</label><input type="text" id="content-contact_address"></div>
+                        <div class="form-group"><label>WhatsApp Number</label><input type="text" id="content-whatsapp_number" placeholder="e.g. 1234567890"></div>
+                        <button type="submit" class="btn">Save Content</button>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Randiya - Timeless Luxury</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="mobile.css">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <!-- Initial Loading Screen -->
+    <div class="loader-overlay" id="loader">
+        <div class="loader-content">
+            <img src="images/logo_nobg.png" alt="Randiya Logo" class="loader-logo-img">
+            <div class="loader-text">
+                <span class="char">R</span>
+                <span class="char">A</span>
+                <span class="char">N</span>
+                <span class="char">D</span>
+                <span class="char">I</span>
+                <span class="char">Y</span>
+                <span class="char">A</span>
+            </div>
+            <div class="loader-progress-bar-container">
+                <div class="loader-progress-bar" id="loader-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-dark-gallery" id="navbar">
+        <a href="#home" class="logo-link">
+            <img src="images/logo_nobg.png" alt="Randiya Logo" class="nav-logo">
+        </a>
+        <div class="nav-links">
+            <a href="index.html#philosophy" class="nav-link">Philosophy</a>
+            <a href="index.html#suites" class="nav-link">Suites</a>
+            <a href="index.html#experiences" class="nav-link">Experiences</a>
+            <a href="gallery.html" class="nav-link">Gallery</a>
+            <button class="btn nav-btn">Reserve</button>
+        </div>
+        <div class="hamburger">
+            <div class="line1"></div>
+            <div class="line2"></div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="main-content">
+        <div style="height: 100px;"></div> <!-- Spacer for fixed navbar -->
+
+        <!-- Gallery Section -->
+        <section class="gallery section-padding" id="gallery">
+            <div class="container container-large">
+                <div class="section-label">04 // Visuals</div>
+                <h2 class="section-title">The Gallery.</h2>
+                <div class="gallery-filters" id="gallery-filters">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="Rooms">Rooms</button>
+                    <button class="filter-btn" data-filter="Events">Events</button>
+                    <button class="filter-btn" data-filter="Dining">Dining</button>
+                    <button class="filter-btn" data-filter="Pool">Pool</button>
+                </div>
+                <div class="gallery-grid" id="gallery-grid">
+                    <!-- Dynamic Gallery Images -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container container-large">
+                <div class="footer-grid">
+                    <div class="footer-brand">
+                        <img src="images/logo_nobg.png" alt="Randiya Logo" class="footer-logo-img">
+                        <p class="footer-tagline">A legacy of luxury. Built for tomorrow.</p>
+                    </div>
+                    <div class="footer-links-group">
+                        <div class="footer-column">
+                            <h4 class="footer-heading">Explore</h4>
+                            <ul>
+                                <li><a href="#philosophy">Philosophy</a></li>
+                                <li><a href="#suites">Suites</a></li>
+                                <li><a href="#experiences">Experiences</a></li>
+                                <li><a href="#">Dining</a></li>
+                            </ul>
+                        </div>
+                        <div class="footer-column">
+                            <h4 class="footer-heading">Connect</h4>
+                            <ul>
+                                <li><a href="#">Contact Us</a></li>
+                                <li><a href="#">Press</a></li>
+                                <li><a href="#">Careers</a></li>
+                                <li><a href="#">Legal</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2026 Randiya. All rights reserved.</p>
+                    <div class="social-links">
+                        <a href="#">IG</a>
+                        <a href="#">FB</a>
+                        <a href="#">X</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <!-- Booking Modal -->
+    <div class="booking-modal-overlay" id="booking-modal">
+        <div class="booking-modal-content">
+            <button class="close-modal-btn" id="close-booking">&times;</button>
+            <div class="booking-layout">
+                <div class="booking-details">
+                    <h2 class="modal-title">Complete Your Reservation</h2>
+                    <p class="modal-subtitle">Experience timeless luxury at Randiya.</p>
+                    
+                    <form id="booking-form" class="booking-form">
+                        <div class="form-group">
+                            <label>Select Room</label>
+                            <select id="booking-room" required>
+                                <option value="">Loading rooms...</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Check-in</label>
+                                <input type="date" id="booking-checkin" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Check-out</label>
+                                <input type="date" id="booking-checkout" required>
+                            </div>
+                        </div>
+                        <div class="availability-status" id="availability-status"></div>
+
+                        <div class="form-group">
+                            <label>Guest Name</label>
+                            <input type="text" id="booking-name" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="booking-email" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Phone</label>
+                                <input type="tel" id="booking-phone" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group promo-group">
+                            <label>Promo Code (Optional)</label>
+                            <div class="promo-input-row">
+                                <input type="text" id="booking-promo" placeholder="Enter code">
+                                <button type="button" class="btn apply-btn" id="apply-promo-btn">Apply</button>
+                            </div>
+                            <div class="promo-status" id="promo-status"></div>
+                        </div>
+
+                        <div class="booking-summary">
+                            <div class="summary-line">
+                                <span>Total Price:</span>
+                                <span class="summary-price" id="summary-total">$0.00</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn submit-booking-btn" id="submit-booking-btn" disabled>Confirm Booking</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WhatsApp Floating Button -->
+    <a href="https://wa.me/1234567890" target="_blank" class="whatsapp-float">
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-whatsapp" viewBox="0 0 16 16">
+            <path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232"/>
+        </svg>
+    </a>
+
+    <!-- GSAP Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="gallery.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>

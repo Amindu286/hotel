@@ -1,0 +1,43 @@
+/* Mobile Navbar Menu styling */
+@media screen and (max-width: 900px) {
+    .nav-links.active {
+        display: flex !important;
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background-color: rgba(245, 244, 239, 0.98);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        z-index: 1000;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    /* Force dark text for visibility on light background */
+    .nav-links.active .nav-link {
+        color: #1a1a1a !important;
+    }
+
+    .nav-links.active .nav-btn {
+        color: #1a1a1a !important;
+        border-color: #1a1a1a !important;
+    }
+
+    .nav-links.active .nav-btn:hover {
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+    }
+
+    /* Hamburger animation */
+    .hamburger.toggle .line1 {
+        transform: rotate(-45deg) translate(-4px, 4px);
+    }
+    
+    .hamburger.toggle .line2 {
+        transform: rotate(45deg) translate(-4px, -4px);
+    }
+}

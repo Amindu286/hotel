@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Randiya - Timeless Luxury</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="mobile.css">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <!-- Initial Loading Screen -->
+    <div class="loader-overlay" id="loader">
+        <div class="loader-content">
+            <img src="images/logo_nobg.png" alt="Randiya Logo" class="loader-logo-img">
+            <div class="loader-text">
+                <span class="char">R</span>
+                <span class="char">A</span>
+                <span class="char">N</span>
+                <span class="char">D</span>
+                <span class="char">I</span>
+                <span class="char">Y</span>
+                <span class="char">A</span>
+            </div>
+            <div class="loader-progress-bar-container">
+                <div class="loader-progress-bar" id="loader-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <a href="#home" class="logo-link">
+            <img src="images/logo_nobg.png" alt="Randiya Logo" class="nav-logo">
+        </a>
+        <div class="nav-links">
+            <a href="#philosophy" class="nav-link">Philosophy</a>
+            <a href="#suites" class="nav-link">Suites</a>
+            <a href="#experiences" class="nav-link">Experiences</a>
+            <a href="gallery.html" class="nav-link">Gallery</a>
+            <button class="btn nav-btn">Reserve</button>
+        </div>
+        <div class="hamburger">
+            <div class="line1"></div>
+            <div class="line2"></div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="main-content">
+        <!-- Hero Section -->
+        <section class="hero" id="home">
+            <div class="hero-slides">
+                <!-- Slide 1 -->
+                <div class="hero-slide active">
+                    <div class="hero-image-container">
+                        <div class="hero-image-wrapper">
+                            <img src="images/hero_hotel_exterior.png" alt="Randiya Exterior" class="hero-image">
+                        </div>
+                        <div class="hero-overlay"></div>
+                    </div>
+                    <div class="hero-content">
+                        <div class="hero-title-wrapper">
+                            <h1 class="hero-title">Timeless <br> <span class="indent">Elegance</span></h1>
+                        </div>
+                    </div>
+                </div>
+                <!-- Slide 2 -->
+                <div class="hero-slide">
+                    <div class="hero-image-container">
+                        <div class="hero-image-wrapper">
+                            <img src="images/hotel_pool.png" alt="Randiya Pool" class="hero-image">
+                        </div>
+                        <div class="hero-overlay"></div>
+                    </div>
+                    <div class="hero-content">
+                        <div class="hero-title-wrapper">
+                            <h1 class="hero-title">Serene <br> <span class="indent">Escapes</span></h1>
+                        </div>
+                    </div>
+                </div>
+                <!-- Slide 3 -->
+                <div class="hero-slide">
+                    <div class="hero-image-container">
+                        <div class="hero-image-wrapper">
+                            <img src="images/modern_hotel_suite.png" alt="Randiya Suite" class="hero-image">
+                        </div>
+                        <div class="hero-overlay"></div>
+                    </div>
+                    <div class="hero-content">
+                        <div class="hero-title-wrapper">
+                            <h1 class="hero-title">Luxury <br> <span class="indent">Redefined</span></h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Static Controls -->
+            <div class="hero-controls">
+                <div class="hero-actions">
+                    <button class="btn hero-btn">Explore Randiya</button>
+                </div>
+                <div class="hero-pagination">
+                    <span class="dot active" data-slide="0"></span>
+                    <span class="dot" data-slide="1"></span>
+                    <span class="dot" data-slide="2"></span>
+                </div>
+            </div>
+
+            <div class="scroll-indicator">
+                <span class="scroll-text">Scroll Down</span>
+                <div class="scroll-line"></div>
+            </div>
+        </section>
+
+        <!-- Philosophy Section -->
+        <section class="philosophy section-padding" id="philosophy">
+            <div class="container container-large">
+                <div class="philosophy-grid">
+                    <div class="philosophy-text-wrapper">
+                        <div class="section-label">01 // The Sanctuary</div>
+                        <h2 class="section-title">A Gateway to <br> The Sacred City.</h2>
+                        <p class="section-desc">At Randiya, we believe true luxury is found in proximity to the divine.
+                            Closely accessible to the revered Sacred City, our architecture acts as a serene bridge
+                            between ancient heritage and modern elegance. Find your peace in a space designed to honor
+                            history while offering unparalleled comfort.</p>
+                        <a href="#" class="link-btn">Discover our story <span class="arrow">→</span></a>
+                    </div>
+                    <div class="philosophy-image-wrapper">
+                        <div class="image-container">
+                            <img src="images/collage.png" alt="Randiya Ambiance" class="philosophy-img gs-reveal">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Suites Section (Carousel to Grid) -->
+        <section class="suites section-padding dark-section" id="suites">
+            <div class="container container-large">
+                <div class="suites-header-flex">
+                    <div class="suites-header-text">
+                        <div class="section-label light">02 // The Spaces</div>
+                        <h2 class="section-title light">Signature <br> Suites.</h2>
+                    </div>
+                    <div class="suites-header-action">
+                        <button class="btn secondary-btn light-btn" id="toggle-rooms-btn">View All Options</button>
+                    </div>
+                </div>
+
+                <!-- Horizontal Carousel View -->
+                <div class="rooms-carousel-wrapper" id="rooms-carousel">
+                    <div class="rooms-carousel">
+                        <!-- Card 1 -->
+                        <div class="room-card-carousel">
+                            <div class="room-image-frame">
+                                <img src="images/modern_hotel_suite.png" alt="The Horizon Suite"
+                                    class="suite-carousel-img">
+                            </div>
+                            <div class="room-info">
+                                <h3 class="room-name">The Horizon Suite</h3>
+                                <p class="room-details">120 SQM &bull; Ocean View</p>
+                            </div>
+                        </div>
+                        <!-- Card 2 -->
+                        <div class="room-card-carousel">
+                            <div class="room-image-frame">
+                                <img src="images/modern_hotel_suite.png" alt="Garden Villa" class="suite-carousel-img">
+                            </div>
+                            <div class="room-info">
+                                <h3 class="room-name">The Garden Villa</h3>
+                                <p class="room-details">150 SQM &bull; Private Pool</p>
+                            </div>
+                        </div>
+                        <!-- Card 3 -->
+                        <div class="room-card-carousel">
+                            <div class="room-image-frame">
+                                <img src="images/modern_hotel_suite.png" alt="Penthouse" class="suite-carousel-img">
+                            </div>
+                            <div class="room-info">
+                                <h3 class="room-name">The Grand Penthouse</h3>
+                                <p class="room-details">250 SQM &bull; Panoramic Sky View</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grid View (Hidden initially) -->
+                <div class="rooms-grid-wrapper hidden" id="rooms-grid">
+                    <div class="rooms-grid">
+                        <div class="room-grid-card">
+                            <img src="images/modern_hotel_suite.png" alt="The Horizon Suite" class="grid-img">
+                            <div class="grid-content">
+                                <h3>The Horizon Suite</h3>
+                                <p>A serene oceanfront experience.</p>
+                                <a href="#" class="link-btn light-link">Reserve <span class="arrow">→</span></a>
+                            </div>
+                        </div>
+                        <div class="room-grid-card">
+                            <img src="images/modern_hotel_suite.png" alt="The Garden Villa" class="grid-img">
+                            <div class="grid-content">
+                                <h3>The Garden Villa</h3>
+                                <p>Lush greens and your private plunge pool.</p>
+                                <a href="#" class="link-btn light-link">Reserve <span class="arrow">→</span></a>
+                            </div>
+                        </div>
+                        <div class="room-grid-card">
+                            <img src="images/modern_hotel_suite.png" alt="The Grand Penthouse" class="grid-img">
+                            <div class="grid-content">
+                                <h3>The Grand Penthouse</h3>
+                                <p>The absolute pinnacle of luxury living.</p>
+                                <a href="#" class="link-btn light-link">Reserve <span class="arrow">→</span></a>
+                            </div>
+                        </div>
+                        <div class="room-grid-card">
+                            <img src="images/modern_hotel_suite.png" alt="Superior Room" class="grid-img">
+                            <div class="grid-content">
+                                <h3>Superior Room</h3>
+                                <p>Elegant space for the modern traveler.</p>
+                                <a href="#" class="link-btn light-link">Reserve <span class="arrow">→</span></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- New Experiences Section (Weddings, Dining, Pool) -->
+        <section class="experiences section-padding" id="experiences">
+            <div class="container container-large">
+                <div class="section-label">03 // Experiences</div>
+                <h2 class="section-title">Beyond <br> Expected.</h2>
+
+                <div class="exp-blocks">
+                    <!-- Dining -->
+                    <div class="exp-block">
+                        <div class="exp-text">
+                            <h3>Culinary Excellence</h3>
+                            <p>Our signature fine dining restaurant offers an exquisite journey through local flavors
+                                and international gastronomy, set in an ambient, timeless aesthetic.</p>
+                            <a href="gallery.html?filter=Dining" class="link-btn">Explore Dining <span class="arrow">→</span></a>
+                        </div>
+                        <div class="exp-image">
+                            <img src="images/hotel_restaurant.png" alt="Randiya Restaurant"
+                                class="gs-parallax-img hover-zoom">
+                        </div>
+                    </div>
+
+                    <!-- Pool -->
+                    <div class="exp-block reverse">
+                        <div class="exp-text">
+                            <h3>Outdoor Infinity Pool</h3>
+                            <p>Merge with the horizon. Our spectacular outdoor infinity pool offers a mesmerizing edge
+                                where the water meets the sky, providing the ultimate tranquil escape.</p>
+                            <a href="gallery.html?filter=Pool" class="link-btn">View Wellness <span class="arrow">→</span></a>
+                        </div>
+                        <div class="exp-image">
+                            <img src="images/hotel_pool.png" alt="Randiya Pool" class="gs-parallax-img hover-zoom">
+                        </div>
+                    </div>
+
+                    <!-- Weddings -->
+                    <div class="exp-block">
+                        <div class="exp-text">
+                            <h3>Timeless Weddings</h3>
+                            <p>Begin your forever surrounded by pristine landscapes. We provide extraordinary, tailored
+                                outdoor wedding venues that blend luxury with the organic beauty of nature.</p>
+                            <a href="gallery.html?filter=Events" class="link-btn">Plan Your Event <span class="arrow">→</span></a>
+                        </div>
+                        <div class="exp-image">
+                            <img src="images/hotel_wedding.png" alt="Randiya Weddings"
+                                class="gs-parallax-img hover-zoom">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container container-large">
+                <div class="footer-grid">
+                    <div class="footer-brand">
+                        <img src="images/logo_nobg.png" alt="Randiya Logo" class="footer-logo-img">
+                        <p class="footer-tagline">A legacy of luxury. Built for tomorrow.</p>
+                    </div>
+                    <div class="footer-links-group">
+                        <div class="footer-column">
+                            <h4 class="footer-heading">Explore</h4>
+                            <ul>
+                                <li><a href="#philosophy">Philosophy</a></li>
+                                <li><a href="#suites">Suites</a></li>
+                                <li><a href="#experiences">Experiences</a></li>
+                                <li><a href="#">Dining</a></li>
+                            </ul>
+                        </div>
+                        <div class="footer-column">
+                            <h4 class="footer-heading">Connect</h4>
+                            <ul>
+                                <li><a href="#">Contact Us</a></li>
+                                <li><a href="#">Press</a></li>
+                                <li><a href="#">Careers</a></li>
+                                <li><a href="#">Legal</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2026 Randiya. All rights reserved.</p>
+                    <div class="social-links">
+                        <a href="#">IG</a>
+                        <a href="#">FB</a>
+                        <a href="#">X</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <!-- Booking Modal -->
+    <div class="booking-modal-overlay" id="booking-modal">
+        <div class="booking-modal-content">
+            <button class="close-modal-btn" id="close-booking">&times;</button>
+            <div class="booking-layout">
+                <div class="booking-details">
+                    <h2 class="modal-title">Complete Your Reservation</h2>
+                    <p class="modal-subtitle">Experience timeless luxury at Randiya.</p>
+                    
+                    <form id="booking-form" class="booking-form">
+                        <div class="form-group">
+                            <label>Select Room</label>
+                            <select id="booking-room" required>
+                                <option value="">Loading rooms...</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Check-in</label>
+                                <input type="date" id="booking-checkin" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Check-out</label>
+                                <input type="date" id="booking-checkout" required>
+                            </div>
+                        </div>
+                        <div class="availability-status" id="availability-status"></div>
+
+                        <div class="form-group">
+                            <label>Guest Name</label>
+                            <input type="text" id="booking-name" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="booking-email" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Phone</label>
+                                <input type="tel" id="booking-phone" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group promo-group">
+                            <label>Promo Code (Optional)</label>
+                            <div class="promo-input-row">
+                                <input type="text" id="booking-promo" placeholder="Enter code">
+                                <button type="button" class="btn apply-btn" id="apply-promo-btn">Apply</button>
+                            </div>
+                            <div class="promo-status" id="promo-status"></div>
+                        </div>
+
+                        <div class="booking-summary">
+                            <div class="summary-line">
+                                <span>Total Price:</span>
+                                <span class="summary-price" id="summary-total">$0.00</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn submit-booking-btn" id="submit-booking-btn" disabled>Confirm Booking</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WhatsApp Floating Button -->
+    <a href="https://wa.me/1234567890" target="_blank" class="whatsapp-float">
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-whatsapp" viewBox="0 0 16 16">
+            <path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232"/>
+        </svg>
+    </a>
+
+    <!-- GSAP Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <!-- Custom Script -->
+    <script src="script.js"></script>
+</body>
+
+</html>

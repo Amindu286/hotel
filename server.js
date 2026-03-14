@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const session = require('express-session');
 const multer = require('multer');
+const bcrypt = require('bcryptjs');
 const db = require('./database');
 
 const app = express();
@@ -21,16 +22,16 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(express.static(path.join(__dirname))); // Serve public frontend
+app.use(express.static(path.join(__dirname)));
 
 // Admin Session configuration
 app.use('/api/admin', session({
     secret: 'hotel-management-secret-key-1234',
     resave: false,
     saveUninitialized: false,
-    cookie: { 
-        maxAge: 3600000, // 1 hour inactivity
-        secure: false // true if https
+    cookie: {
+        maxAge: 3600000,
+        secure: false
     }
 }));
 
@@ -60,166 +61,159 @@ app.get('/api/health', (req, res) => {
 
 // Get all rooms with their primary image
 app.get('/api/rooms', (req, res) => {
-    const query = `
-        SELECT r.*, i.image_path 
-        FROM rooms r 
-        LEFT JOIN room_images i ON r.id = i.room_id AND i.is_primary = 1
-    `;
-    db.all(query, [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
+    try {
+        const rows = db.prepare(`
+            SELECT r.*, i.image_path 
+            FROM rooms r 
+            LEFT JOIN room_images i ON r.id = i.room_id AND i.is_primary = 1
+        `).all();
         res.json(rows);
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Get single room details and images
 app.get('/api/rooms/:id', (req, res) => {
-    const roomId = req.params.id;
-    db.get('SELECT * FROM rooms WHERE id = ?', [roomId], (err, room) => {
-        if (err) return res.status(500).json({ error: err.message });
+    try {
+        const room = db.prepare('SELECT * FROM rooms WHERE id = ?').get(req.params.id);
         if (!room) return res.status(404).json({ error: 'Room not found' });
-        
-        db.all('SELECT * FROM room_images WHERE room_id = ?', [roomId], (err, images) => {
-            if (err) return res.status(500).json({ error: err.message });
-            room.images = images;
-            res.json(room);
-        });
-    });
+        room.images = db.prepare('SELECT * FROM room_images WHERE room_id = ?').all(req.params.id);
+        res.json(room);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Check availability for a specific date range
 app.post('/api/availability', (req, res) => {
-    const { room_id, check_in, check_out } = req.body;
-    if (!room_id || !check_in || !check_out) {
-        return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    const query = `
-        SELECT COUNT(*) as count FROM bookings 
-        WHERE room_id = ? AND status = 'confirmed'
-        AND check_in < ? AND check_out > ?
-    `;
-    db.get(query, [room_id, check_out, check_in], (err, row) => {
-        if (err) return res.status(500).json({ error: err.message });
+    try {
+        const { room_id, check_in, check_out } = req.body;
+        if (!room_id || !check_in || !check_out) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        const row = db.prepare(`
+            SELECT COUNT(*) as count FROM bookings 
+            WHERE room_id = ? AND status = 'confirmed'
+            AND check_in < ? AND check_out > ?
+        `).get(room_id, check_out, check_in);
         res.json({ available: row.count === 0 });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Validate promo code
 app.post('/api/check-promo', (req, res) => {
-    const { code } = req.body;
-    if (!code) return res.status(400).json({ error: 'Promo code required' });
-
-    db.get('SELECT * FROM promo_codes WHERE code = ? AND is_active = 1 AND valid_until >= date("now")', [code], (err, row) => {
-        if (err) return res.status(500).json({ error: err.message });
+    try {
+        const { code } = req.body;
+        if (!code) return res.status(400).json({ error: 'Promo code required' });
+        const row = db.prepare('SELECT * FROM promo_codes WHERE code = ? AND is_active = 1 AND valid_until >= date("now")').get(code);
         if (!row) return res.json({ valid: false, message: 'Invalid or expired promo code' });
         res.json({ valid: true, discount_percent: row.discount_percent });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 const getDaysBetween = (start, end) => {
     const startDate = new Date(start);
     const endDate = new Date(end);
-    const timeDiff = endDate.getTime() - startDate.getTime();
-    return Math.ceil(timeDiff / (1000 * 3600 * 24));
+    return Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24));
 };
 
 // Create a booking
 app.post('/api/bookings', (req, res) => {
-    const { room_id, guest_name, guest_email, guest_phone, check_in, check_out, promo_code } = req.body;
-    if (!room_id || !guest_name || !check_in || !check_out) {
-        return res.status(400).json({ error: 'Missing required fields' });
-    }
+    try {
+        const { room_id, guest_name, guest_email, guest_phone, check_in, check_out, promo_code } = req.body;
+        if (!room_id || !guest_name || !check_in || !check_out) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
 
-    // 1. Verify availability again
-    const availQuery = `
-        SELECT COUNT(*) as count FROM bookings 
-        WHERE room_id = ? AND status = 'confirmed' AND check_in < ? AND check_out > ?
-    `;
-    db.get(availQuery, [room_id, check_out, check_in], (err, availRow) => {
-        if (err) return res.status(500).json({ error: err.message });
+        // Check availability
+        const availRow = db.prepare(`
+            SELECT COUNT(*) as count FROM bookings 
+            WHERE room_id = ? AND status = 'confirmed' AND check_in < ? AND check_out > ?
+        `).get(room_id, check_out, check_in);
         if (availRow.count > 0) return res.status(400).json({ error: 'Room is not available for these dates' });
 
-        // 2. Calculate price (incorporating seasonal pricing)
-        db.get('SELECT price_per_night FROM rooms WHERE id = ?', [room_id], (err, roomRow) => {
-            if (err) return res.status(500).json({ error: err.message });
-            if (!roomRow) return res.status(404).json({ error: 'Room not found' });
-            
-            const basePrice = roomRow.price_per_night;
-            
-            db.get(`SELECT price_override FROM seasonal_pricing WHERE room_id = ? AND start_date <= ? AND end_date >= ?`, [room_id, check_in, check_in], (err, seasonRow) => {
-                let nightlyRate = basePrice;
-                if (seasonRow) nightlyRate = seasonRow.price_override;
+        // Get base price
+        const roomRow = db.prepare('SELECT price_per_night FROM rooms WHERE id = ?').get(room_id);
+        if (!roomRow) return res.status(404).json({ error: 'Room not found' });
 
-                const days = Math.max(1, getDaysBetween(check_in, check_out));
-                let totalPrice = nightlyRate * days;
+        // Check seasonal pricing
+        const seasonRow = db.prepare(`
+            SELECT price_override FROM seasonal_pricing 
+            WHERE room_id = ? AND start_date <= ? AND end_date >= ?
+        `).get(room_id, check_in, check_in);
 
-                // 3. Apply promo code
-                const finalizeBooking = (finalPrice) => {
-                    const insertQuery = `
-                        INSERT INTO bookings (room_id, guest_name, guest_email, guest_phone, check_in, check_out, total_price)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
-                    `;
-                    db.run(insertQuery, [room_id, guest_name, guest_email, guest_phone, check_in, check_out, finalPrice], function(err) {
-                        if (err) return res.status(500).json({ error: err.message });
-                        res.json({ success: true, booking_id: this.lastID, total_price: finalPrice });
-                    });
-                };
+        const nightlyRate = seasonRow ? seasonRow.price_override : roomRow.price_per_night;
+        const days = Math.max(1, getDaysBetween(check_in, check_out));
+        let totalPrice = nightlyRate * days;
 
-                if (promo_code) {
-                    db.get('SELECT discount_percent FROM promo_codes WHERE code = ? AND is_active = 1 AND valid_until >= date("now")', [promo_code], (err, promoRow) => {
-                        if (promoRow) {
-                            totalPrice = totalPrice * (1 - (promoRow.discount_percent / 100));
-                        }
-                        finalizeBooking(totalPrice);
-                    });
-                } else {
-                    finalizeBooking(totalPrice);
-                }
-            });
-        });
-    });
+        // Apply promo code
+        if (promo_code) {
+            const promoRow = db.prepare('SELECT discount_percent FROM promo_codes WHERE code = ? AND is_active = 1 AND valid_until >= date("now")').get(promo_code);
+            if (promoRow) {
+                totalPrice = totalPrice * (1 - (promoRow.discount_percent / 100));
+            }
+        }
+
+        const result = db.prepare(`
+            INSERT INTO bookings (room_id, guest_name, guest_email, guest_phone, check_in, check_out, total_price)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `).run(room_id, guest_name, guest_email, guest_phone, check_in, check_out, totalPrice);
+
+        res.json({ success: true, booking_id: result.lastInsertRowid, total_price: totalPrice });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Get events
 app.get('/api/events', (req, res) => {
-    const query = `
-        SELECT e.*, i.image_path 
-        FROM events e 
-        LEFT JOIN event_images i ON e.id = i.event_id 
-        GROUP BY e.id
-    `;
-    db.all(query, [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
+    try {
+        const rows = db.prepare(`
+            SELECT e.*, i.image_path 
+            FROM events e 
+            LEFT JOIN event_images i ON e.id = i.event_id 
+            GROUP BY e.id
+        `).all();
         res.json(rows);
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Get gallery
 app.get('/api/gallery', (req, res) => {
-    db.all('SELECT * FROM gallery_images ORDER BY category, uploaded_at DESC', [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
+    try {
+        const rows = db.prepare('SELECT * FROM gallery_images ORDER BY category, uploaded_at DESC').all();
         res.json(rows);
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Get site content
 app.get('/api/content', (req, res) => {
-    db.all('SELECT section_key, content_value FROM site_content', [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
+    try {
+        const rows = db.prepare('SELECT section_key, content_value FROM site_content').all();
         const content = {};
         rows.forEach(r => content[r.section_key] = r.content_value);
         res.json(content);
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // --- Admin API Routes (Protected) ---
-const bcrypt = require('bcrypt');
 
 // Admin Login
 app.post('/api/admin/login', (req, res) => {
-    const { username, password } = req.body;
-    db.get('SELECT * FROM admin_users WHERE username = ?', [username], (err, user) => {
-        if (err) return res.status(500).json({ error: err.message });
+    try {
+        const { username, password } = req.body;
+        const user = db.prepare('SELECT * FROM admin_users WHERE username = ?').get(username);
         if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
         const match = bcrypt.compareSync(password, user.password_hash);
@@ -227,7 +221,9 @@ app.post('/api/admin/login', (req, res) => {
 
         req.session.adminId = user.id;
         res.json({ success: true });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.post('/api/admin/logout', requireAdmin, (req, res) => {
@@ -236,229 +232,236 @@ app.post('/api/admin/logout', requireAdmin, (req, res) => {
 });
 
 app.get('/api/admin/session', (req, res) => {
-    if (req.session && req.session.adminId) {
-        res.json({ loggedIn: true });
-    } else {
-        res.json({ loggedIn: false });
-    }
+    res.json({ loggedIn: !!(req.session && req.session.adminId) });
 });
 
 // Admin Dashboard stats
 app.get('/api/admin/dashboard', requireAdmin, (req, res) => {
-    const stats = {};
-    const today = new Date().toISOString().split('T')[0];
-    
-    // Total bookings
-    db.get('SELECT COUNT(*) as count FROM bookings', [], (err, row) => {
-        stats.total_bookings = row ? row.count : 0;
-        
-        // Upcoming check-ins today
-        db.get('SELECT COUNT(*) as count FROM bookings WHERE check_in = ? AND status = "confirmed"', [today], (err, row2) => {
-            stats.check_ins_today = row2 ? row2.count : 0;
-            
-            // Rooms currently occupied
-            db.get('SELECT COUNT(*) as count FROM bookings WHERE check_in <= ? AND check_out >= ? AND status = "confirmed"', [today, today], (err, row3) => {
-                stats.occupied_rooms = row3 ? row3.count : 0;
-                
-                // Total revenue this month
-                const startOfMonth = new Date();
-                startOfMonth.setDate(1);
-                const startStr = startOfMonth.toISOString().split('T')[0];
-                db.get('SELECT SUM(total_price) as revenue FROM bookings WHERE created_at >= ? AND status != "cancelled"', [startStr], (err, row4) => {
-                    stats.revenue_this_month = row4 && row4.revenue ? row4.revenue : 0;
-                    res.json(stats);
-                });
-            });
-        });
-    });
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        const startStr = startOfMonth.toISOString().split('T')[0];
+
+        const stats = {
+            total_bookings: db.prepare('SELECT COUNT(*) as count FROM bookings').get().count,
+            check_ins_today: db.prepare('SELECT COUNT(*) as count FROM bookings WHERE check_in = ? AND status = "confirmed"').get(today).count,
+            occupied_rooms: db.prepare('SELECT COUNT(*) as count FROM bookings WHERE check_in <= ? AND check_out >= ? AND status = "confirmed"').get(today, today).count,
+            revenue_this_month: db.prepare('SELECT SUM(total_price) as revenue FROM bookings WHERE created_at >= ? AND status != "cancelled"').get(startStr).revenue || 0
+        };
+        res.json(stats);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Admin Rooms CRUD
 app.post('/api/admin/rooms', requireAdmin, (req, res) => {
-    const { name, type, description, price_per_night, max_guests, status } = req.body;
-    db.run(
-        `INSERT INTO rooms (name, type, description, price_per_night, max_guests, status) VALUES (?, ?, ?, ?, ?, ?)`,
-        [name, type, description, price_per_night, max_guests, status],
-        function(err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ id: this.lastID, success: true });
-        }
-    );
+    try {
+        const { name, type, description, price_per_night, max_guests, status } = req.body;
+        const result = db.prepare(
+            'INSERT INTO rooms (name, type, description, price_per_night, max_guests, status) VALUES (?, ?, ?, ?, ?, ?)'
+        ).run(name, type, description, price_per_night, max_guests, status);
+        res.json({ id: result.lastInsertRowid, success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.put('/api/admin/rooms/:id', requireAdmin, (req, res) => {
-    const { name, type, description, price_per_night, max_guests, status } = req.body;
-    db.run(
-        `UPDATE rooms SET name = ?, type = ?, description = ?, price_per_night = ?, max_guests = ?, status = ? WHERE id = ?`,
-        [name, type, description, price_per_night, max_guests, status, req.params.id],
-        (err) => {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ success: true });
-        }
-    );
+    try {
+        const { name, type, description, price_per_night, max_guests, status } = req.body;
+        db.prepare(
+            'UPDATE rooms SET name = ?, type = ?, description = ?, price_per_night = ?, max_guests = ?, status = ? WHERE id = ?'
+        ).run(name, type, description, price_per_night, max_guests, status, req.params.id);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.delete('/api/admin/rooms/:id', requireAdmin, (req, res) => {
-    db.run('DELETE FROM rooms WHERE id = ?', [req.params.id], (err) => {
-        if (err) return res.status(500).json({ error: err.message });
+    try {
+        db.prepare('DELETE FROM rooms WHERE id = ?').run(req.params.id);
         res.json({ success: true });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.post('/api/admin/rooms/:id/images', requireAdmin, upload.array('images', 5), (req, res) => {
-    const roomId = req.params.id;
-    const files = req.files;
-    let count = 0;
-    
-    if(!files || files.length === 0) return res.json({success: true});
-    
-    files.forEach((file, index) => {
-        // Find if this room has images already
-        db.get('SELECT count(*) as cnt FROM room_images WHERE room_id = ?', [roomId], (err, row) => {
-            const isPrimary = (row.cnt === 0 && index === 0) ? 1 : 0;
-            db.run('INSERT INTO room_images (room_id, image_path, is_primary) VALUES (?, ?, ?)', [roomId, `/uploads/${file.filename}`, isPrimary], (err) => {
-                count++;
-                if (count === files.length) res.json({ success: true });
-            });
+    try {
+        const roomId = req.params.id;
+        const files = req.files;
+        if (!files || files.length === 0) return res.json({ success: true });
+
+        const countRow = db.prepare('SELECT count(*) as cnt FROM room_images WHERE room_id = ?').get(roomId);
+        files.forEach((file, index) => {
+            const isPrimary = (countRow.cnt === 0 && index === 0) ? 1 : 0;
+            db.prepare('INSERT INTO room_images (room_id, image_path, is_primary) VALUES (?, ?, ?)').run(roomId, `/uploads/${file.filename}`, isPrimary);
         });
-    });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Admin Pricing Manager
 app.get('/api/admin/seasonal_pricing', requireAdmin, (req, res) => {
-    db.all(`SELECT sp.*, r.name as room_name FROM seasonal_pricing sp JOIN rooms r ON sp.room_id = r.id`, [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
+    try {
+        const rows = db.prepare('SELECT sp.*, r.name as room_name FROM seasonal_pricing sp JOIN rooms r ON sp.room_id = r.id').all();
         res.json(rows);
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.post('/api/admin/seasonal_pricing', requireAdmin, (req, res) => {
-    const { room_id, start_date, end_date, price_override } = req.body;
-    db.run('INSERT INTO seasonal_pricing (room_id, start_date, end_date, price_override) VALUES (?, ?, ?, ?)', 
-        [room_id, start_date, end_date, price_override], 
-        function(err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ id: this.lastID, success: true });
-    });
+    try {
+        const { room_id, start_date, end_date, price_override } = req.body;
+        const result = db.prepare('INSERT INTO seasonal_pricing (room_id, start_date, end_date, price_override) VALUES (?, ?, ?, ?)').run(room_id, start_date, end_date, price_override);
+        res.json({ id: result.lastInsertRowid, success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.delete('/api/admin/seasonal_pricing/:id', requireAdmin, (req, res) => {
-    db.run('DELETE FROM seasonal_pricing WHERE id = ?', [req.params.id], (err) => {
-        if (err) return res.status(500).json({ error: err.message });
+    try {
+        db.prepare('DELETE FROM seasonal_pricing WHERE id = ?').run(req.params.id);
         res.json({ success: true });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Admin Promo Codes
 app.get('/api/admin/promos', requireAdmin, (req, res) => {
-    db.all('SELECT * FROM promo_codes', [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
-    });
+    try {
+        res.json(db.prepare('SELECT * FROM promo_codes').all());
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.post('/api/admin/promos', requireAdmin, (req, res) => {
-    const { code, discount_percent, valid_until, is_active } = req.body;
-    db.run('INSERT INTO promo_codes (code, discount_percent, valid_until, is_active) VALUES (?, ?, ?, ?)', 
-        [code, discount_percent, valid_until, is_active !== undefined ? is_active : 1], 
-        function(err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ id: this.lastID, success: true });
-    });
+    try {
+        const { code, discount_percent, valid_until, is_active } = req.body;
+        const result = db.prepare('INSERT INTO promo_codes (code, discount_percent, valid_until, is_active) VALUES (?, ?, ?, ?)').run(code, discount_percent, valid_until, is_active !== undefined ? is_active : 1);
+        res.json({ id: result.lastInsertRowid, success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.put('/api/admin/promos/:id', requireAdmin, (req, res) => {
-    const { code, discount_percent, valid_until, is_active } = req.body;
-    db.run('UPDATE promo_codes SET code = ?, discount_percent = ?, valid_until = ?, is_active = ? WHERE id = ?',
-        [code, discount_percent, valid_until, is_active, req.params.id],
-        (err) => {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ success: true });
-    });
+    try {
+        const { code, discount_percent, valid_until, is_active } = req.body;
+        db.prepare('UPDATE promo_codes SET code = ?, discount_percent = ?, valid_until = ?, is_active = ? WHERE id = ?').run(code, discount_percent, valid_until, is_active, req.params.id);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.delete('/api/admin/promos/:id', requireAdmin, (req, res) => {
-    db.run('DELETE FROM promo_codes WHERE id = ?', [req.params.id], (err) => {
-        if (err) return res.status(500).json({ error: err.message });
+    try {
+        db.prepare('DELETE FROM promo_codes WHERE id = ?').run(req.params.id);
         res.json({ success: true });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Admin Bookings Manager
 app.get('/api/admin/bookings', requireAdmin, (req, res) => {
-    db.all(`SELECT b.*, r.name as room_name FROM bookings b JOIN rooms r ON b.room_id = r.id ORDER BY b.created_at DESC`, [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
+    try {
+        const rows = db.prepare('SELECT b.*, r.name as room_name FROM bookings b JOIN rooms r ON b.room_id = r.id ORDER BY b.created_at DESC').all();
         res.json(rows);
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.post('/api/admin/bookings', requireAdmin, (req, res) => {
-    const { room_id, guest_name, guest_email, guest_phone, check_in, check_out, total_price, status } = req.body;
-    db.run(`INSERT INTO bookings (room_id, guest_name, guest_email, guest_phone, check_in, check_out, total_price, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [room_id, guest_name, guest_email, guest_phone, check_in, check_out, total_price, status || 'confirmed'],
-        function(err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ id: this.lastID, success: true });
-        }
-    );
+    try {
+        const { room_id, guest_name, guest_email, guest_phone, check_in, check_out, total_price, status } = req.body;
+        const result = db.prepare('INSERT INTO bookings (room_id, guest_name, guest_email, guest_phone, check_in, check_out, total_price, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(room_id, guest_name, guest_email, guest_phone, check_in, check_out, total_price, status || 'confirmed');
+        res.json({ id: result.lastInsertRowid, success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.put('/api/admin/bookings/:id/cancel', requireAdmin, (req, res) => {
-    db.run('UPDATE bookings SET status = "cancelled" WHERE id = ?', [req.params.id], (err) => {
-        if (err) return res.status(500).json({ error: err.message });
+    try {
+        db.prepare('UPDATE bookings SET status = "cancelled" WHERE id = ?').run(req.params.id);
         res.json({ success: true });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Admin Events Manager
 app.post('/api/admin/events', requireAdmin, (req, res) => {
-    const { title, description, event_date } = req.body;
-    db.run('INSERT INTO events (title, description, event_date) VALUES (?, ?, ?)', [title, description, event_date], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ id: this.lastID, success: true });
-    });
+    try {
+        const { title, description, event_date } = req.body;
+        const result = db.prepare('INSERT INTO events (title, description, event_date) VALUES (?, ?, ?)').run(title, description, event_date);
+        res.json({ id: result.lastInsertRowid, success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.post('/api/admin/events/:id/images', requireAdmin, upload.single('image'), (req, res) => {
-    if(!req.file) return res.status(400).json({error: 'No image uploaded'});
-    db.run('INSERT INTO event_images (event_id, image_path) VALUES (?, ?)', [req.params.id, `/uploads/${req.file.filename}`], (err) => {
-        if (err) return res.status(500).json({ error: err.message });
+    try {
+        if (!req.file) return res.status(400).json({ error: 'No image uploaded' });
+        db.prepare('INSERT INTO event_images (event_id, image_path) VALUES (?, ?)').run(req.params.id, `/uploads/${req.file.filename}`);
         res.json({ success: true });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.delete('/api/admin/events/:id', requireAdmin, (req, res) => {
-    db.run('DELETE FROM events WHERE id = ?', [req.params.id], (err) => {
-        if (err) return res.status(500).json({ error: err.message });
+    try {
+        db.prepare('DELETE FROM events WHERE id = ?').run(req.params.id);
         res.json({ success: true });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Admin Gallery Manager
 app.post('/api/admin/gallery', requireAdmin, upload.single('image'), (req, res) => {
-    const { category, caption } = req.body;
-    if(!req.file) return res.status(400).json({error: 'No image uploaded'});
-    db.run('INSERT INTO gallery_images (category, image_path, caption) VALUES (?, ?, ?)', [category, `/uploads/${req.file.filename}`, caption], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ id: this.lastID, success: true });
-    });
+    try {
+        const { category, caption } = req.body;
+        if (!req.file) return res.status(400).json({ error: 'No image uploaded' });
+        const result = db.prepare('INSERT INTO gallery_images (category, image_path, caption) VALUES (?, ?, ?)').run(category, `/uploads/${req.file.filename}`, caption);
+        res.json({ id: result.lastInsertRowid, success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.delete('/api/admin/gallery/:id', requireAdmin, (req, res) => {
-    db.run('DELETE FROM gallery_images WHERE id = ?', [req.params.id], (err) => {
-        if (err) return res.status(500).json({ error: err.message });
+    try {
+        db.prepare('DELETE FROM gallery_images WHERE id = ?').run(req.params.id);
         res.json({ success: true });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Admin Content Manager
 app.put('/api/admin/content', requireAdmin, (req, res) => {
-    const { section_key, content_value } = req.body;
-    db.run(`INSERT INTO site_content (section_key, content_value) VALUES (?, ?) ON CONFLICT(section_key) DO UPDATE SET content_value = ?`, 
-    [section_key, content_value, content_value], (err) => {
-        if (err) return res.status(500).json({ error: err.message });
+    try {
+        const { section_key, content_value } = req.body;
+        db.prepare('INSERT INTO site_content (section_key, content_value) VALUES (?, ?) ON CONFLICT(section_key) DO UPDATE SET content_value = ?').run(section_key, content_value, content_value);
         res.json({ success: true });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Server Initialization
